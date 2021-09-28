@@ -1,10 +1,10 @@
 from .core import Manifest
 from .io.QapioIOContext import QapioIOContext
 
+
 class QapioContext(object):
 
     def __init__(self, manifest: Manifest):
-
         self.__manifest = manifest
         self.__io_context = QapioIOContext(manifest)
 

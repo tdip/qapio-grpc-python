@@ -5,10 +5,10 @@ INPUT_STREAMS = 'inputStreams'
 OUTPUT_STREAMS = 'outputStreams'
 GRAPH_ID = 'processId'
 
+
 class Manifest:
 
     def __init__(self, raw):
-
         self.__raw = raw
 
     @property
@@ -22,6 +22,7 @@ class Manifest:
     @property
     def output_streams(self):
         return self.__raw[OUTPUT_STREAMS]
+
 
 def load_qapio_manifest():
     # Receive the manifest for the standard input

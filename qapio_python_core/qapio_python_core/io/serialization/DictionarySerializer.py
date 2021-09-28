@@ -5,9 +5,11 @@ from typing import Any, Iterable, List
 from .StreamDeserializerBase import StreamDeserializerBase
 from .StreamSerializerBase import StreamSerializerBase
 
+
 class State(Enum):
     READ_LENGTH = 1
     READ_OBJECT = 2
+
 
 class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
 
@@ -37,7 +39,6 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
         if self.__state != State.READ_OBJECT:
             raise Exception("Serializer must read length before reading an object")
 
-        
         if len(self.__data) < self.__remaining:
             return None
 
@@ -56,7 +57,7 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
 
         next_object = self.__try_read_next()
 
-        while(isinstance(next_object, dict)):
+        while isinstance(next_object, dict):
             print("python is yielding object %s" % str(next_object))
             yield next_object
             next_object = self.__try_read_next()
@@ -72,7 +73,7 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
         return result
 
     def write_object(self, data):
-    
+
         # todo: chunk big objects
         payload_bytes = bytes(json.dumps(data), 'utf-8')
         payload_length = len(payload_bytes).to_bytes(4, byteorder='little')

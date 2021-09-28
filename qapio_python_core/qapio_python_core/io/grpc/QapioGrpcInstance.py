@@ -13,16 +13,16 @@ from .proto.GrpcGraphEvaluator_pb2 import OutputRequest
 from .proto.GrpcGraphEvaluator_pb2_grpc import GraphEvaluatorStub
 from .GrpcInput import GrpcInput
 
-def concat_map(os : Observable, f):
 
+def concat_map(os: Observable, f):
     def accumulator(state, next):
         (_, previous) = state
         values = list(it.chain(previous, next))
 
         if len(values) > 0:
-            return ([values[0]], values[1:])
+            return [values[0]], values[1:]
         else:
-            return ([], [])
+            return [], []
 
     return os.pipe(
         op.map(f),
@@ -33,6 +33,7 @@ def concat_map(os : Observable, f):
         op.subscribe_on(scheduler)
     )
 
+
 class QapioGrpcInstance(object):
 
     def __init__(self, channel: Channel):
@@ -41,11 +42,11 @@ class QapioGrpcInstance(object):
         self.__stub = GraphEvaluatorStub(channel)
         self.__serializer = DictionarySerializer
 
-    def open_input(self, graphId: str, streamId: str) -> Observer[Union[dict, List[dict]]]:
+    def open_input(self, graph_id: str, stream_id: str) -> Observer[Union[dict, List[dict]]]:
 
-        return GrpcInput(self.__stub, graphId, streamId, self.__serializer())
+        return GrpcInput(self.__stub, graph_id, stream_id, self.__serializer())
 
-    def open_output(self, graphId: str, streamId: str) -> Observable[dict]:
+    def open_output(self, graph_id: str, stream_id: str) -> Observable[dict]:
         """
         Opens a output_stream (from Qapio's perspective) which
         allows qapio to push values into python. This stream
@@ -53,13 +54,13 @@ class QapioGrpcInstance(object):
         with all the power of RX
         """
 
-        args = OutputRequest(graphId = graphId, streamId = streamId)
+        args = OutputRequest(graphId=graph_id, streamId=stream_id)
 
         serializer = self.__serializer()
 
         def deserialize(data: Any):
             try:
-                return serializer.write_bytes(data.value) # rx.from_list(serializer.write_bytes(data.value))
+                return serializer.write_bytes(data.value)  # rx.from_list(serializer.write_bytes(data.value))
             except Exception as e:
                 print("python is screwed... %s" % str(e))
                 raise e
