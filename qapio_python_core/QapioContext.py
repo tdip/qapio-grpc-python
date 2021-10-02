@@ -9,7 +9,7 @@ class QapioContext(object):
         self.__io_context = QapioIOContext(manifest)
 
     def __enter__(self, *args, **kwargs):
-        print("opening qapio context")
+        #print("opening qapio context")
         self.__io_context.__enter__(*args, **kwargs)
         return self
 

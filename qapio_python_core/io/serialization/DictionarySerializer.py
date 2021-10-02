@@ -30,7 +30,7 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
         self.__data = self.__data[4:]
         self.__state = State.READ_OBJECT
         self.__remaining = int.from_bytes(length_bytes, byteorder='little')
-        print("python is next object length %i" % self.__remaining)
+        #print("python is next object length %i" % self.__remaining)
 
         return True
 
@@ -58,7 +58,7 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
         next_object = self.__try_read_next()
 
         while isinstance(next_object, dict):
-            print("python is yielding object %s" % str(next_object))
+            #print("python is yielding object %s" % str(next_object))
             yield next_object
             next_object = self.__try_read_next()
 
@@ -68,7 +68,7 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
 
         result = list(self.__read_all_objects())
 
-        print("Python is yielded objects %s" % str(result))
+        #print("Python is yielded objects %s" % str(result))
 
         return result
 

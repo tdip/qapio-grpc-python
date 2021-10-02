@@ -13,9 +13,9 @@ class QapioIOContext(object):
         self.__manifest = manifest
 
     def __enter__(self, *args, **kwargs):
-        print("opening grpc...")
+        #print("opening grpc...")
         self.__channel = grpc.insecure_channel('localhost:5000')
-        print("opened grpc")
+        #print("opened grpc")
         self.__grpc = QapioGrpcInstance(self.__channel)
         return self
 

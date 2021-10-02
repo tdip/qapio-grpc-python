@@ -45,6 +45,6 @@ def load_qapio_manifest():
         os.read(0, manifest_length).decode('utf8')
     )
 
-    print("loaded python manifest", manifest)
+    #print("loaded python manifest", manifest)
 
     return Manifest(manifest)

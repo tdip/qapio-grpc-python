@@ -62,7 +62,7 @@ class QapioGrpcInstance(object):
             try:
                 return serializer.write_bytes(data.value)  # rx.from_list(serializer.write_bytes(data.value))
             except Exception as e:
-                print("python is screwed... %s" % str(e))
+                #print("python is screwed... %s" % str(e))
                 raise e
 
         return concat_map(rx.from_iterable(self.__stub.Output(args)), deserialize)
