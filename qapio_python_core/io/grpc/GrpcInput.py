@@ -26,13 +26,14 @@ class GrpcInput(Observer):
 
         return map(to_any, self.__serialize(payload))
 
-    def __to_grpc_payload(self, payload: List[dict]) -> InputRequest:
+    def __to_grpc_payload(self, payload: List[dict]) -> Iterable[InputRequest]:
         serialized_payload = itertools.chain(*map(self.__serialize_to_any, payload))
 
-        return InputRequest(
-            graphId=self.__graphId,
-            streamId=self.__streamId,
-            values=list(serialized_payload)
+        for event in list(serialized_payload):
+            yield InputRequest(
+                graphId=self.__graphId,
+                streamId=self.__streamId,
+                values=[event]
         )
 
     def on_next(self, payload: Union[dict, List[dict]]):
@@ -41,12 +42,12 @@ class GrpcInput(Observer):
 
         # todo: emit several events for big messages
 
-        def generate_route():
-            encoded_payload = self.__to_grpc_payload(payload)
-            yield encoded_payload
+        # def generate_route():
+        #     encoded_payload = self.__to_grpc_payload(payload)
+        #     yield encoded_payload
 
         # self.__stub.Input([encoded_payload])
-        self.__stub.Input(generate_route())
+        self.__stub.Input(self.__to_grpc_payload(payload))
 
     def on_completed(self):
         pass
