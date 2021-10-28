@@ -1,3 +1,4 @@
+from typing import Iterable
 from enum import Enum
 import json
 from typing import Any, Iterable, List
@@ -5,10 +6,26 @@ from typing import Any, Iterable, List
 from .StreamDeserializerBase import StreamDeserializerBase
 from .StreamSerializerBase import StreamSerializerBase
 
-
 class State(Enum):
     READ_LENGTH = 1
     READ_OBJECT = 2
+
+MAX_BYTES_LENGTH = 1024
+
+def split_bytes(b : bytes) -> Iterable[bytes]:
+
+    current_length = len(b)
+
+    while current_length > 0:
+        if current_length > MAX_BYTES_LENGTH:
+            next_bytes = b[0:MAX_BYTES_LENGTH]
+            b = b[len(next_bytes):]
+        else:
+            next_bytes = b[0:]
+            b = bytes()
+
+        current_length = len(b)
+        yield next_bytes
 
 
 class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
@@ -78,4 +95,5 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
         payload_bytes = bytes(json.dumps(data), 'utf-8')
         payload_length = len(payload_bytes).to_bytes(4, byteorder='little')
 
-        return [payload_length + payload_bytes]
+        #return [payload_length + payload_bytes]
+        return list(split_bytes(payload_length + payload_bytes))
