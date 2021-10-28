@@ -2,8 +2,8 @@ import rx.operators as op
 import signal
 from time import sleep
 import os
-from qapio_python_core import init
-from qapio_python_core.core import scheduler
+from . import init
+from .core import scheduler
 
 
 class ExecutionContext:
