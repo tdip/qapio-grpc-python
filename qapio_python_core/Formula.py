@@ -19,9 +19,9 @@ class ExecutionContext:
         self.__running = value
 
 
-def do_work(init_instance, ctx: dict):
+def do_work(init_instance, ctx):
 
-    results = init_instance.function(ctx)
+    results = init_instance.function(ctx[0].get("state").get("value").get("parameters"), ctx[1])
 
     return results
 
@@ -63,7 +63,13 @@ def formula(fn):
             initialize_response_stream = io_context.open_input('response')
             initialize_request_stream = io_context.open_output(
                 'request')
+            context_stream = io_context.open_output(
+                'context')
+
+
             merged_output = initialize_request_stream.pipe(
+
+                op.combine_latest(context_stream),
                 op.subscribe_on(scheduler), op.observe_on(scheduler)
             )
 
