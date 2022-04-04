@@ -34,7 +34,7 @@ class GrpcInput(Observer):
                 graphId=self.__graphId,
                 streamId=self.__streamId,
                 values=[event]
-        )
+            )
 
     def on_next(self, payload: Union[dict, List[dict]]):
         if isinstance(payload, dict):

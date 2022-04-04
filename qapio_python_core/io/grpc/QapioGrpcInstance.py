@@ -5,6 +5,7 @@ import rx
 import rx.operators as op
 from rx.core.typing import Observer, Observable
 from typing import List, Union
+from rx.scheduler import ImmediateScheduler
 
 from ...core import scheduler
 from ..serialization.DictionarySerializer import DictionarySerializer
@@ -13,12 +14,18 @@ from .proto.GrpcGraphEvaluator_pb2 import OutputRequest
 from .proto.GrpcGraphEvaluator_pb2_grpc import GraphEvaluatorStub
 from .GrpcInput import GrpcInput
 
+n = 0
 
 def concat_map(os: Observable, f):
     def accumulator(state, next):
-        (_, previous) = state
-        values = list(it.chain(previous, next))
+        # global n
+        # n = n + 1
+        # print(n)
 
+        (_, previous) = state
+
+        values = list(it.chain(previous, next))
+        # print(len(values))
         if len(values) > 0:
             return [values[0]], values[1:]
         else:
@@ -30,7 +37,7 @@ def concat_map(os: Observable, f):
         op.map(lambda x: x[0]),
         op.filter(lambda x: len(x) > 0),
         op.map(lambda x: x[0]),
-        op.subscribe_on(scheduler)
+        op.subscribe_on(scheduler), op.observe_on(scheduler)
     )
 
 
@@ -53,16 +60,17 @@ class QapioGrpcInstance(object):
         is abstracted into an Observable so it can be transformed
         with all the power of RX
         """
-
         args = OutputRequest(graphId=graph_id, streamId=stream_id)
 
         serializer = self.__serializer()
 
         def deserialize(data: Any):
             try:
-                return serializer.write_bytes(data.value)  # rx.from_list(serializer.write_bytes(data.value))
+                s = serializer.write_bytes(data.value)
+                return s # rx.from_list(serializer.write_bytes(data.value))
             except Exception as e:
-                #print("python is screwed... %s" % str(e))
+                print(data.value)
+                print("python dld is screwed... %s" % str(e))
                 raise e
 
         return concat_map(rx.from_iterable(self.__stub.Output(args)), deserialize)

@@ -17,9 +17,12 @@ class QapioIOContext(object):
         self.__channel = grpc.insecure_channel('localhost:5000')
         #print("opened grpc")
         self.__grpc = QapioGrpcInstance(self.__channel)
+
+
         return self
 
     def __exit__(self, *args, **kwargs):
+        self.__channel.close()
         self.__grpc = None
 
     def open_input(self, stream_id: str) -> Observer[Union[dict, List[dict]]]:

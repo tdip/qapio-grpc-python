@@ -2,7 +2,7 @@ from typing import Iterable
 from enum import Enum
 import json
 from typing import Any, Iterable, List
-
+import funcy
 from .StreamDeserializerBase import StreamDeserializerBase
 from .StreamSerializerBase import StreamSerializerBase
 
@@ -31,7 +31,7 @@ def split_bytes(b : bytes) -> Iterable[bytes]:
 class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
 
     def __init__(self):
-        self.__data = bytes()
+        self.__data = bytearray()
         self.__state = State.READ_LENGTH
         self.__remaining = 0
 
@@ -44,9 +44,10 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
             return False
 
         length_bytes = self.__data[0:4]
-        self.__data = self.__data[4:]
+        self.__data = bytearray(self.__data[4:])
         self.__state = State.READ_OBJECT
         self.__remaining = int.from_bytes(length_bytes, byteorder='little')
+
         #print("python is next object length %i" % self.__remaining)
 
         return True
@@ -64,7 +65,9 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
         self.__remaining = 0
         self.__state = State.READ_LENGTH
 
-        return json.loads(payload_bytes.decode("utf-8"))
+        val = json.loads(payload_bytes.decode("utf-8"))
+
+        return val
 
     def __try_read_next(self):
 
@@ -81,7 +84,8 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
 
     def write_bytes(self, data: bytes) -> List[Any]:
 
-        self.__data = self.__data + data
+        #self.__data = b''.join([self.__data,  data])
+        self.__data += data
 
         result = list(self.__read_all_objects())
 
@@ -94,6 +98,12 @@ class DictionarySerializer(StreamDeserializerBase, StreamSerializerBase):
         # todo: chunk big objects
         payload_bytes = bytes(json.dumps(data), 'utf-8')
         payload_length = len(payload_bytes).to_bytes(4, byteorder='little')
-
         #return [payload_length + payload_bytes]
-        return list(split_bytes(payload_length + payload_bytes))
+        data = payload_length + payload_bytes
+        #print("HELLO")
+
+        chunks = list(funcy.chunks(1024, data))
+        #print("HIOO")
+        #split = list(split_bytes(data))
+
+        return chunks
