@@ -1,11 +1,10 @@
 from google.protobuf.any_pb2 import Any
 from grpc import Channel
 import itertools as it
-import rx
-import rx.operators as op
-from rx.core.typing import Observer, Observable
+import reactivex as rx
+from reactivex import operators as op
+
 from typing import List, Union
-from rx.scheduler import ImmediateScheduler
 
 from ...core import scheduler
 from ..serialization.DictionarySerializer import DictionarySerializer
@@ -16,7 +15,7 @@ from .GrpcInput import GrpcInput
 
 n = 0
 
-def concat_map(os: Observable, f):
+def concat_map(os, f):
     def accumulator(state, next):
         # global n
         # n = n + 1
@@ -49,11 +48,11 @@ class QapioGrpcInstance(object):
         self.__stub = GraphEvaluatorStub(channel)
         self.__serializer = DictionarySerializer
 
-    def open_input(self, graph_id: str, stream_id: str) -> Observer[Union[dict, List[dict]]]:
+    def open_input(self, graph_id: str, stream_id: str):
 
         return GrpcInput(self.__stub, graph_id, stream_id, self.__serializer())
 
-    def open_output(self, graph_id: str, stream_id: str) -> Observable[dict]:
+    def open_output(self, graph_id: str, stream_id: str):
         """
         Opens a output_stream (from Qapio's perspective) which
         allows qapio to push values into python. This stream

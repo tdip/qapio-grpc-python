@@ -1,6 +1,6 @@
 from google.protobuf.any_pb2 import Any
 import itertools
-from rx.core.typing import Observer
+from reactivex import Observer
 from typing import Iterable, List, Union
 
 from ..serialization.StreamSerializerBase import StreamSerializerBase

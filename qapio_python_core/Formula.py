@@ -1,4 +1,5 @@
-import rx.operators as op
+import reactivex as rx
+from reactivex import operators as op
 import signal
 from time import sleep
 import os

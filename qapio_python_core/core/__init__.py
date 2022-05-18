@@ -1,5 +1,7 @@
-from rx.scheduler import ThreadPoolScheduler
+import reactivex
+from reactivex.scheduler import ThreadPoolScheduler
+import multiprocessing
 
-optimal_thread_count = 6  # multiprocessing.cpu_count()
+optimal_thread_count = multiprocessing.cpu_count()
 
 scheduler = ThreadPoolScheduler(optimal_thread_count)
