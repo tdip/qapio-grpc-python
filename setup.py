@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'grpcio==1.45.0',
-    'Rx==3.2.0',
+    'reactivex==4.0.0',
     'protobuf==3.20.1'
 ]
 
