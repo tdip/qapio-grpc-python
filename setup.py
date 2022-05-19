@@ -11,7 +11,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'grpcio==1.46.2',
+    'grpcio',
     'reactivex==4.0.0',
     'protobuf==3.20.1'
 ]
