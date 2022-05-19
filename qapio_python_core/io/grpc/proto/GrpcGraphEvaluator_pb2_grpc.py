@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import GrpcGraphEvaluator_pb2 as GrpcGraphEvaluator__pb2
+from . import GrpcGraphEvaluator_pb2 as GrpcGraphEvaluator__pb2
 from google.protobuf import any_pb2 as google_dot_protobuf_dot_any__pb2
 
 
