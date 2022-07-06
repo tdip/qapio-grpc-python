@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 
 INPUT_STREAMS = 'inputStreams'
 OUTPUT_STREAMS = 'outputStreams'
@@ -34,10 +33,16 @@ def load_qapio_manifest():
 
     # The first bytes contain the length
     # of the manifest
-    filename = sys.argv[ 1 ]
+    manifest_length = int.from_bytes(
+        os.read(0, 4),
+        "little"
+    )
 
+    # The next "manifest_length" bytes contain the
+    # UTF-8 encoded JSON representation of the
+    # manifest.
     manifest = json.loads(
-        filename
+        os.read(0, manifest_length).decode('utf8')
     )
 
     #print("loaded python manifest", manifest)
