@@ -4,6 +4,7 @@ import os
 INPUT_STREAMS = 'inputStreams'
 OUTPUT_STREAMS = 'outputStreams'
 GRAPH_ID = 'processId'
+REQUEST_ID = 'requestId'
 
 
 class Manifest:
@@ -14,6 +15,10 @@ class Manifest:
     @property
     def graph_id(self):
         return self.__raw[GRAPH_ID]
+
+    @property
+    def request_id(self):
+        return self.__raw[REQUEST_ID]
 
     @property
     def input_streams(self):

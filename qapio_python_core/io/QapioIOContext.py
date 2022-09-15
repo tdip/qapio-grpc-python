@@ -24,6 +24,10 @@ class QapioIOContext(object):
         self.__channel.close()
         self.__grpc = None
 
+    @property
+    def request_id(self):
+         return self.__manifest.request_id
+
     def open_input(self, stream_id: str):
         return self.__grpc.open_input(self.__manifest.graph_id, stream_id)
 
