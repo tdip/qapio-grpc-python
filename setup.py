@@ -13,7 +13,8 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     'grpcio',
     'reactivex==4.0.0',
-    'protobuf==3.20.1'
+    'protobuf==3.20.1',
+    "funcy"
 ]
 
 test_requirements = [ ]
