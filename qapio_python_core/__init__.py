@@ -1,6 +1,6 @@
 from .core.Manifest import load_qapio_manifest
 from .QapioContext import QapioContext
-from .fsm.FSM import FSM
+from .fsm.FSM import FSM, Action
 import json
 from time import sleep
 
@@ -9,12 +9,24 @@ def init():
     return QapioContext(load_qapio_manifest())
 
 
+def is_json(myjson):
+    try:
+        json.loads(myjson)
+    except ValueError as e:
+        return False
+    return True
+
 def connect(fn):
     a = fn.start()
 
     def subscriber(next, *args, **kwargs):
 
-        state = a.ask(Action(next["type"], 123))
+        state = None
+
+        if is_json(next["payload"]):
+            state = a.ask(Action(next["type"], json.loads(next["payload"])))
+        else:
+            state = a.ask(Action(next["type"], next["payload"]))
 
         execution_response_stream.on_next({"value": json.dumps(state.state_data.__dict__)})
 
