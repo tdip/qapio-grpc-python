@@ -14,7 +14,9 @@ requirements = [
     'grpcio',
     'reactivex==4.0.0',
     'protobuf==3.20.1',
-    "funcy"
+    "funcy",
+    "pykka",
+    "python-graphql_client"
 ]
 
 test_requirements = [ ]
