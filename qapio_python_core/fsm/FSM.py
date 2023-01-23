@@ -3,6 +3,7 @@ from typing import Generic, TypeVar, Callable, TypedDict, Any
 from copy import deepcopy
 from typing import Union
 
+
 TStateName = TypeVar("TStateName")
 TStateData = TypeVar("TStateData")
 
