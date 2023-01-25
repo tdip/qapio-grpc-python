@@ -16,7 +16,7 @@ requirements = [
     'protobuf==3.20.1',
     "funcy",
     "pykka",
-    "python-graphql_client"
+    "gql"
 ]
 
 test_requirements = [ ]
