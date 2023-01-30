@@ -16,7 +16,8 @@ requirements = [
     'protobuf==3.20.1',
     "funcy",
     "pykka",
-    "gql"
+    "gql",
+    "aiohttp"
 ]
 
 test_requirements = [ ]
