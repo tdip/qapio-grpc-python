@@ -1,7 +1,7 @@
 from .core.Manifest import load_qapio_manifest
 from .QapioContext import QapioContext
 from .fsm.FSM import FSM, Action
-from .qapi.Qapi import Qapi
+from .qapi.Qapi import Qapi, TimeSeriesApi
 import json
 from time import sleep
 
