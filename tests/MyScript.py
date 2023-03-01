@@ -1,4 +1,4 @@
-from qapio_python_core.screening.factor.Factor import factor, Context, FactorResult
+from qapio_python_core.screening import factor, Context, FactorResult
 
 
 @factor
