@@ -1,1 +1,1 @@
-from factor.Factor import factor, Context, FactorResult
+from .factor.Factor import factor, Context, FactorResult
