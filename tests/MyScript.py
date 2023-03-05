@@ -1,6 +1,5 @@
 from qapio_python_core.screening import factor, Context, FactorResult
 
-
 @factor
 class MyFactor:
     def __init__(self):
@@ -10,7 +9,7 @@ class MyFactor:
         pass
 
     def formula(self, result: FactorResult, context: Context):
-        result.value = 124
+        result.value = 50.655
 
 
 
