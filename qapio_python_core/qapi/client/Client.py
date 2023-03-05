@@ -103,11 +103,9 @@ class QapioGrpc:
         self.api = APIActor.start(grpc_endpoint, manifest)
         self.__qapi = Qapi(gql_endpoint, sync=True)
     def input(self, stream_id):
-        print("LD")
         return self.api.proxy().open_input(stream_id)
 
     def output(self, stream_id, receiver):
-        print("LDG")
         self.api.proxy().open_output(stream_id, receiver)
 
     @property

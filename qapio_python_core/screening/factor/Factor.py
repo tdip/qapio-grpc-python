@@ -6,7 +6,7 @@ from pykka import ThreadingActor
 
 from qapio_python_core import load_qapio_manifest
 from qapio_python_core.qapi.client.Client import QapioGrpc
-from qapio_python_core.screening import Context
+from qapio_python_core.screening.shared.Context import Context
 
 
 def print_to_stderr(a):

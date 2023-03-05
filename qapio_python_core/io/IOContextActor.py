@@ -12,10 +12,8 @@ class MainActor(pykka.ThreadingActor):
     def __enter__(self, *args, **kwargs):
         self.__channel = grpc.insecure_channel('localhost:5113')
         self.__grpc = QapioGrpcInstance(self.__channel)
-        print("DØHD")
         return self
 
     def __exit__(self, *args, **kwargs):
         self.__channel.close()
         self.__grpc = None
-        print("DLGD")

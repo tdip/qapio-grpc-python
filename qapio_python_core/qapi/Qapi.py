@@ -270,7 +270,6 @@ class TimeSeriesApi:
         cache_key = json.dumps([",".join(measurements), ",".join(fields), from_date, to_date, bucket])
 
         if cache_key in self.__cache:
-            print("REUSE2", file=sys.stderr)
             return self.__cache[cache_key]
 
         data = self.__client.query(self.__node_id, "time-series", [",".join(measurements), ",".join(fields), from_date, to_date, bucket])
