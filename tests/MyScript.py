@@ -9,6 +9,7 @@ class MyFactor:
         pass
 
     def formula(self, result: FactorResult, context: Context):
+        context.time_series("MyInfluxNode").dataset("EXTRACT", ["EM"], ["VOLATILITY"], "2000-01-01", "2023-03-01")
         result.value = 50.655
 
 

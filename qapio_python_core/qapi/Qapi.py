@@ -61,7 +61,6 @@ class Qapi:
     def query(self, node_id: str, command: str, arguments: List[Union[str, int, float, bool]] = [], options: Options = {}):
         cache_key = json.dumps({"nodeId": node_id, "command": [command]+arguments})
         if cache_key in self.__cache:
-            print("RESUSE", file=sys.stderr)
             return self.__cache[cache_key]
         result = self.__client.execute(self.__query, variable_values={"nodeId": node_id, "command": [command]+arguments})
         self.__cache[cache_key] = result
@@ -273,7 +272,7 @@ class TimeSeriesApi:
             return self.__cache[cache_key]
 
         data = self.__client.query(self.__node_id, "time-series", [",".join(measurements), ",".join(fields), from_date, to_date, bucket])
-        csv = json.loads(data["cmd"]["payload"]["json"])
+        csv = json.loads(data)
         df = QapioFluxCsvParser.parse_to_dataframe({"value": csv})
         result = DataSet(df)
         self.__cache[cache_key] = result
