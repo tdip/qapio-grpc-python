@@ -14,14 +14,17 @@ def print_to_stderr(a):
 
 
 class FactorResult:
-    def __init__(self, measurement: str, date: Timestamp, field: str):
+    def __init__(self, universe_id: str, measurement: str, date: Timestamp, field: str):
+        self.__universe_id = universe_id
         self.measurement = measurement
         self.date = date
         self.field = field
         self.value = None
 
     def results(self):
-        return [{"measurement": self.measurement, "time": self.date.strftime("%Y-%m-%dT%H:%M:%SZ"), "fields": {self.field: self.value}, "tags": {}}]
+        return [{"measurement": self.__universe_id, "time": self.date.strftime("%Y-%m-%dT%H:%M:%SZ"), "fields": {self.field: self.value}, "tags": {
+            "FSYM_ID": self.measurement
+        }}]
 
 
 class Factor(ThreadingActor):
@@ -45,7 +48,7 @@ class Factor(ThreadingActor):
         return parsed
     def on_receive(self, request):
         message = request["universes"]
-
+        node_id = request["universeId"]
         try:
             results = {}
             dates = self.get_dates(message)
@@ -54,10 +57,11 @@ class Factor(ThreadingActor):
             for date, universe in dates.items():
                 results[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = []
                 for member in universe:
-                    factor_date_result = FactorResult(member["measurement"], date, request["nodeId"])
+                    factor_date_result = FactorResult(node_id, member["measurement"], date, request["nodeId"])
                     self.__instance.formula(factor_date_result, context)
-                    for r in factor_date_result.results():
-                        results[r["time"]].append(r)
+                    if factor_date_result.value is not None:
+                        for r in factor_date_result.results():
+                            results[r["time"]].append(r)
 
             self.__input.proxy().on_next({"results": results})
         except Exception as ex:
@@ -74,7 +78,7 @@ class Factor(ThreadingActor):
 
 def factor(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
+    qapio = QapioGrpc('localhost:5113', "http://localhost:8084/graphql", manifest)
     Factor.start(qapio, fn)
 
 

@@ -1,7 +1,24 @@
 from qapio_python_core.qapi.Qapi import Qapi
+
 qapi = Qapi("http://localhost:4000/graphql")
 
+#esults = qapi.time_series("MyInfluxNode").dataset("MY_DATA", ["B02ZTY-R", "B1MKLM-R", "B4KHWT-R"], ["VOLATILITY"], "2000-01-01", "2023-03-01")
 
-results = qapi.query("Factor1", "run", ["-12 days", "-1 day", "APL"])
+query = f'from(bucket: "EXTRACT")' \
+        f'|> range(start: -1y, stop: now())' \
+        f'|> filter(fn: (r) => r["_measurement"] == "EM" and r["_field"]=="VOLATILITY")' \
+        f'|> keep(columns: ["FSYM_ID","_measurement"])' \
+        f'|> distinct()'
 
-print(results)
+members = []
+
+
+results = qapi.time_series("MyInfluxNode").query(query)
+
+
+measurements = list(results.FSYM_ID.unique())
+
+for member in measurements:
+    members.append({"measurement": member, "meta": {}})
+
+print(members)

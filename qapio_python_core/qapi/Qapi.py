@@ -257,6 +257,18 @@ class DataSet:
 
         return last
 
+
+
+def transform_tags(tags):
+    if not tags:
+        return []
+    kvps = []
+    for key, values in tags.items():
+        if not any('.' in value for value in values):
+            kvp = ' or '.join(f'r.{key} == "{value}"' for value in values)
+            kvps.append(kvp)
+    return ['--Tag'] + ['\n' + kvp for kvp in kvps]
+
 class TimeSeriesApi:
     def __init__(self, client: Qapi, node_id: str):
         self.__cache = {}
@@ -264,14 +276,28 @@ class TimeSeriesApi:
         self.__client = client
         self.__node_id = node_id
 
-    def dataset(self, bucket: str, measurements: List[str], fields: List[str], from_date, to_date, tags: dict = dict({})):
+    def query(self, query):
 
-        cache_key = json.dumps([",".join(measurements), ",".join(fields), from_date, to_date, bucket])
+        cache_key = json.dumps(query)
 
         if cache_key in self.__cache:
             return self.__cache[cache_key]
 
-        data = self.__client.query(self.__node_id, "time-series", [",".join(measurements), ",".join(fields), from_date, to_date, bucket])
+        data = self.__client.query(self.__node_id, "query", [query])
+        csv = json.loads(data)
+        df = QapioFluxCsvParser.parse_to_dataframe({"value": csv})
+        self.__cache[cache_key] = df
+        return df
+
+
+    def dataset(self, bucket: str, measurements: List[str], fields: List[str], from_date, to_date, tags: dict = dict({})):
+
+        cache_key = json.dumps([",".join(measurements), ",".join(fields), from_date, to_date, bucket] + transform_tags(tags))
+
+        if cache_key in self.__cache:
+            return self.__cache[cache_key]
+
+        data = self.__client.query(self.__node_id, "time-series", [",".join(measurements), ",".join(fields), from_date, to_date, bucket] + transform_tags(tags))
         csv = json.loads(data)
         df = QapioFluxCsvParser.parse_to_dataframe({"value": csv})
         result = DataSet(df)
