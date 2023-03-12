@@ -78,8 +78,7 @@ class Factor(ThreadingActor):
 
 def factor(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc('localhost:5113', "http://localhost:8084/graphql", manifest)
+    qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
     Factor.start(qapio, fn)
-
 
 

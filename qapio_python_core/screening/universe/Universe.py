@@ -7,7 +7,8 @@ from pykka import ThreadingActor
 from qapio_python_core import load_qapio_manifest
 from qapio_python_core.qapi.client.Client import QapioGrpc
 from qapio_python_core.screening.shared.Context import Context
-
+import json
+import hashlib
 
 class UniverseResult:
     def __init__(self, measurement: str, date: Timestamp):
@@ -40,19 +41,35 @@ class Universe(ThreadingActor):
         message = request["dates"]
 
         try:
-            results = {}
+            results = dict({'map': dict({}), 'index': dict({})})
+
             dates = self.get_dates(message)
             context = Context(self.__api.qapi)
             self.__instance.begin(context)
+
             for date in dates:
-                results[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = []
+
                 universe_result = UniverseResult(request["nodeId"], date)
 
                 self.__instance.formula(universe_result, context)
 
-                results[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = universe_result.results()
+                raw = universe_result.results()
 
-            self.__input.proxy().on_next({"results": results})
+                json_representation = json.dumps(raw)
+                key = hashlib.md5(json_representation.encode()).hexdigest()
+
+                if key not in results.get("index"):
+                    results.get("index")[key] = raw
+
+                #out_data[date] = uni
+
+                #out_data.get("universeMap")[date] = key
+                results.get("map")[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = key
+
+
+            #                results[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = universe_result.results()
+
+            self.__input.proxy().on_next(results)
         except Exception as ex:
             traceback.print_exc()
             # traceback = ex.__traceback__
@@ -67,8 +84,5 @@ class Universe(ThreadingActor):
 
 def universe(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc('localhost:5113', "http://localhost:8084/graphql", manifest)
+    qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
     Universe.start(qapio, fn)
-
-
-
