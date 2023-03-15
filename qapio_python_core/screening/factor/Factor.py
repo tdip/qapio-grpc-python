@@ -74,43 +74,34 @@ class Factor(ThreadingActor):
 
 
 
-# def factor():
-#     def decorator(cls):
-#         class DecoratedClass(cls):
-#             def __init__(self, *args, **kwargs):
-#                 super().__init__(*args, **kwargs)
-#
-#         mode = os.environ.get("MODE")
-#
-#         if mode != "PROD":
-#             instance = DecoratedClass()
-#
-#             if hasattr(instance, "test_cases"):
-#                 for case in instance.test_cases:
-#                     print(case)
-#         else:
-#             instance = DecoratedClass()
-#             manifest = load_qapio_manifest()
-#             qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
-#             Factor.start(qapio, instance)
-#         #instance.run()
-#
-#
-#         return DecoratedClass
-#
-#     return decorator
-#
-#
-#
-#
-#
-#
-#
-
-
 def factor(fn):
-    manifest = load_qapio_manifest()
-    qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
-    Factor.start(qapio, fn)
+
+
+    instance = fn()
+
+    if hasattr(instance, "test_cases"):
+       print("Running in test mode.")
+
+    else:
+        manifest = load_qapio_manifest()
+        qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
+        Factor.start(qapio, instance)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def factor(fn):
+#     manifest = load_qapio_manifest()
+#     qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
+#     Factor.start(qapio, fn)
 
 

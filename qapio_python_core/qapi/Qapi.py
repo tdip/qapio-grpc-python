@@ -11,6 +11,7 @@ from numpy import finfo, float32, nan
 from pandas.api.types import is_numeric_dtype
 from pandas import Timestamp, DataFrame, Series, Timedelta, offsets, MultiIndex, to_datetime
 import sys
+from typing import Union
 
 class Options(TypedDict):
     key: str
@@ -290,7 +291,13 @@ class TimeSeriesApi:
         return df
 
 
-    def dataset(self, bucket: str, measurements: List[str], fields: List[str], from_date, to_date, tags: dict = dict({})):
+    def dataset(self, bucket: str, measurements: List[str], fields: List[str], from_date: Union[Timestamp, str], to_date: Union[Timestamp, str], tags: dict = dict({})):
+
+        if type(from_date) == Timestamp:
+            from_date = timestamp2str(from_date)
+
+        if type(to_date) == Timestamp:
+            to_date = timestamp2str(to_date)
 
         cache_key = json.dumps([",".join(measurements), ",".join(fields), from_date, to_date, bucket] + transform_tags(tags))
 

@@ -84,16 +84,15 @@ def factor():
     return decorator
 
 
-def test_data(endpoint, factor_id, universe_id, universes):
+def factor_test_case(endpoint: str, factor_id: str, universe_id: str, universes: dict):
     def decorator(cls):
         class DecoratedClass(cls):
             def __init__(self, *args, **kwargs):
-                mode = os.environ.get("MODE")
-                if mode != "PROD":
-                    if hasattr(self, "test_cases"):
-                        self.test_cases = self.test_cases + [Factor(endpoint, self, {"nodeId": factor_id, "universeId": universe_id, "universes": universes})]
-                    else:
-                        self.test_cases = [Factor(endpoint, self, {"nodeId": factor_id, "universeId": universe_id, "universes": universes})]
+                if hasattr(self, "test_cases"):
+                    self.test_cases = self.test_cases + [Factor(endpoint, self, {"nodeId": factor_id, "universeId": universe_id, "universes": universes})]
+                else:
+                    self.test_cases = [Factor(endpoint, self, {"nodeId": factor_id, "universeId": universe_id, "universes": universes})]
+
                 super().__init__(*args, **kwargs)
 
         return DecoratedClass

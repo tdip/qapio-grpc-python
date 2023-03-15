@@ -17,7 +17,12 @@ requirements = [
     "funcy",
     "pykka",
     "gql",
-    "aiohttp"
+    "aiohttp",
+    "aioreactive",
+    "requests",
+    "requests_toolbelt",
+    "influxdb_client",
+    "pandas"
 ]
 
 test_requirements = [ ]
