@@ -32,7 +32,7 @@ class Factor(ThreadingActor):
         super().__init__()
         self.__api = api
         self.__log = api.api
-        self.__instance = instance()
+        self.__instance = instance
         self.__input = api.input("RESPONSE").get()
         api.output("REQUEST", self.actor_ref)
 
