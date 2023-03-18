@@ -1,6 +1,5 @@
 import sys
 import traceback
-import os
 from pandas import Timestamp
 from pykka import ThreadingActor
 
@@ -49,11 +48,19 @@ class Factor(ThreadingActor):
     def on_receive(self, request):
         message = request["universes"]
         node_id = request["universeId"]
+
         try:
             results = {}
             dates = self.get_dates(message)
-            context = Context(self.__api.qapi)
+
+            all_members = []
+            for date, value in message.items():
+                all_members = all_members + [o.get("measurement") for o in value]
+
+            context = Context(self.__api.qapi, list(dates.keys()), list(set(all_members)))
+
             self.__instance.begin(context)
+
             for date, universe in dates.items():
                 results[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = []
                 for member in universe:
@@ -66,12 +73,6 @@ class Factor(ThreadingActor):
             self.__input.proxy().on_next({"results": results})
         except Exception as ex:
             traceback.print_exc()
-            # traceback = ex.__traceback__
-            #
-            # while traceback:
-            #     print_to_stderr("{}: {}".format(traceback.tb_frame.f_code.co_filename, traceback.tb_lineno))
-            #     traceback = traceback.tb_next
-
 
 
 def factor(fn):
@@ -80,28 +81,9 @@ def factor(fn):
     instance = fn()
 
     if hasattr(instance, "test_cases"):
-       print("Running in test mode.")
+        print("Running in test mode.")
 
     else:
         manifest = load_qapio_manifest()
         qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
         Factor.start(qapio, instance)
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def factor(fn):
-#     manifest = load_qapio_manifest()
-#     qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
-#     Factor.start(qapio, fn)
-
-

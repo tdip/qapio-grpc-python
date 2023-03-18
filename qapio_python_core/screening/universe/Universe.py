@@ -1,4 +1,3 @@
-import sys
 import traceback
 
 from pandas import Timestamp
@@ -44,7 +43,9 @@ class Universe(ThreadingActor):
             results = dict({'map': dict({}), 'index': dict({})})
 
             dates = self.get_dates(message)
-            context = Context(self.__api.qapi)
+
+            context = Context(self.__api.qapi, list(dates), [])
+
             self.__instance.begin(context)
 
             for date in dates:

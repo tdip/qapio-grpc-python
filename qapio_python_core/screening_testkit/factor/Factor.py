@@ -1,6 +1,5 @@
 import traceback
 from pandas import Timestamp
-from pykka import ThreadingActor
 import os
 from qapio_python_core import Qapi
 from qapio_python_core.screening import FactorResult
@@ -31,7 +30,11 @@ class Factor:
             results = {}
             dates = self.get_dates(message)
 
-            context = Context(self.__api)
+            all_members = []
+            for date, value in message.items():
+                all_members = all_members + [o.get("measurement") for o in value]
+
+            context = Context(self.__api, list(dates.keys()), list(set(all_members)))
 
             self.__instance.begin(context)
 
