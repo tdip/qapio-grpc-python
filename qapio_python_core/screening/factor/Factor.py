@@ -20,6 +20,9 @@ class FactorResult:
         self.field = field
         self.value = None
 
+    def set_value(self, value):
+        self.value = value
+
     def results(self):
         return [{"measurement": self.__universe_id, "time": self.date.strftime("%Y-%m-%dT%H:%M:%SZ"), "fields": {self.field: self.value}, "tags": {
             "FSYM_ID": self.measurement
