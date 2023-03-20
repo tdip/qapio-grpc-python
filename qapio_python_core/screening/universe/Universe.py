@@ -44,7 +44,7 @@ class Universe(ThreadingActor):
 
             dates = self.get_dates(message)
 
-            context = Context(self.__api.qapi, list(dates), [])
+            context = Context(self.__api.qapi, list(dates), [], "")
 
             self.__instance.begin(context)
 

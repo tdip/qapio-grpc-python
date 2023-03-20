@@ -34,7 +34,7 @@ class Factor:
             for date, value in message.items():
                 all_members = all_members + [o.get("measurement") for o in value]
 
-            context = Context(self.__api, list(dates.keys()), list(set(all_members)))
+            context = Context(self.__api, list(dates.keys()), list(set(all_members)), node_id)
 
             self.__instance.begin(context)
 
