@@ -40,7 +40,7 @@ class Universe(ThreadingActor):
         message = request["dates"]
 
         try:
-            results = dict({'map': dict({}), 'index': dict({})})
+            results = dict({'guid': request["guid"], 'map': dict({}), 'index': dict({})})
 
             dates = self.get_dates(message)
 
@@ -50,7 +50,7 @@ class Universe(ThreadingActor):
 
             for date in dates:
 
-                universe_result = UniverseResult(request["nodeId"], date)
+                universe_result = UniverseResult(request["id"], date)
 
                 self.__instance.formula(universe_result, context)
 

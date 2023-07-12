@@ -1,4 +1,4 @@
-from qapio_python_core.qapi.Qapi import TimeSeriesApi
+from qapio_python_core.qapi.Qapi import TimeSeriesApi, SqlApi
 class Context:
     def __init__(self, qapi, dates, members, universe_name):
         self.qapi = qapi
@@ -8,4 +8,7 @@ class Context:
 
     def time_series(self, node_id: str) -> TimeSeriesApi:
         return self.qapi.time_series(node_id)
+
+    def sql(self, node_id: str) -> SqlApi:
+        return self.qapi.sql(node_id)
 

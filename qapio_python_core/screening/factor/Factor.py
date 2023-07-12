@@ -24,8 +24,8 @@ class FactorResult:
         self.value = value
 
     def results(self):
-        return [{"measurement": self.__universe_id, "time": self.date.strftime("%Y-%m-%dT%H:%M:%SZ"), "fields": {self.field: self.value}, "tags": {
-            "FSYM_ID": self.measurement
+        return [{"measurement": self.measurement, "time": self.date.strftime("%Y-%m-%dT%H:%M:%SZ"), "fields": {self.field: self.value}, "tags": {
+            "FSYM_ID": self.__universe_id
         }}]
 
 
@@ -49,8 +49,8 @@ class Factor(ThreadingActor):
 
         return parsed
     def on_receive(self, request):
-        message = request["universes"]
-        node_id = request["universeId"]
+        message = request["universe"]
+        universeId = request["measurement"]
 
         try:
             results = {}
@@ -60,20 +60,20 @@ class Factor(ThreadingActor):
             for date, value in message.items():
                 all_members = all_members + [o.get("measurement") for o in value]
 
-            context = Context(self.__api.qapi, list(dates.keys()), list(set(all_members)), node_id)
+            context = Context(self.__api.qapi, list(dates.keys()), list(set(all_members)), universeId)
 
             self.__instance.begin(context)
 
             for date, universe in dates.items():
                 results[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = []
                 for member in universe:
-                    factor_date_result = FactorResult(node_id, member["measurement"], date, request["nodeId"])
+                    factor_date_result = FactorResult(universeId, member["measurement"], date, universeId)
                     self.__instance.formula(factor_date_result, context)
                     if factor_date_result.value is not None:
                         for r in factor_date_result.results():
                             results[r["time"]].append(r)
 
-            self.__input.proxy().on_next({"results": results})
+            self.__input.proxy().on_next({"guid": request["guid"], 'data': results})
         except Exception as ex:
             traceback.print_exc()
 

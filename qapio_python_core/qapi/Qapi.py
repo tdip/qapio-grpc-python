@@ -5,13 +5,12 @@ from typing import List, Union, TypedDict
 import json
 from influxdb_client.client.flux_csv_parser import FluxCsvParser, FluxSerializationMode
 from io import StringIO
-from pandas import DataFrame
 import csv as csv_parser
 from numpy import finfo, float32, nan
 from pandas.api.types import is_numeric_dtype
-from pandas import Timestamp, DataFrame, Series, Timedelta, offsets, MultiIndex, to_datetime
-import sys
-from typing import Union
+from pandas import Timestamp, DataFrame, Series, Timedelta, offsets, MultiIndex, to_datetime, read_csv, melt
+from pytz import UTC
+
 
 class Options(TypedDict):
     key: str
@@ -22,6 +21,7 @@ class Qapi:
     def __init__(self, http_endpoint: str, ws_endpoint: str = "", sync: bool = False):
         self.__cache = {}
         self.__time_series = {}
+        self.__sql = {}
         self.__http_endpoint = http_endpoint
         self.__ws_endpoint = ws_endpoint
         if sync:
@@ -32,8 +32,8 @@ class Qapi:
         self.__client = Client(transport=self.http_transport, fetch_schema_from_transport=True)
         self.__query = gql(
             """
-            query Command($nodeId: String!, $command: [String!]!) {
-                cmd(nodeId: $nodeId, command: $command) {
+            query Operation($nodeId: String!, $args: [String!]!) {
+                operation(nodeId: $nodeId, args: $args) {
                     payload {typeName, json}
                     type,
                     meta {correlationId}
@@ -43,8 +43,8 @@ class Qapi:
         )
         self.__mutation = gql(
             """
-            mutation Command($nodeId: String!, $command: [String!]!) {
-                cmd(nodeId: $nodeId, command: $command) {
+            mutation Operation($nodeId: String!, $args: [String!]!) {
+                operation(nodeId: $nodeId, command: $args) {
                     requestId,
                     error
                 }
@@ -59,16 +59,23 @@ class Qapi:
         self.__time_series[node_id] = ts
         return ts
 
+    def sql(self, node_id):
+        if node_id in self.__sql:
+            return self.__sql[node_id]
+        ts = SqlApi(self, node_id)
+        self.__sql[node_id] = ts
+        return ts
+
     def query(self, node_id: str, command: str, arguments: List[Union[str, int, float, bool]] = [], options: Options = {}):
-        cache_key = json.dumps({"nodeId": node_id, "command": [command]+arguments})
+        cache_key = json.dumps({"nodeId": node_id, "args": [command]+arguments})
         if cache_key in self.__cache:
             return self.__cache[cache_key]
-        result = self.__client.execute(self.__query, variable_values={"nodeId": node_id, "command": [command]+arguments})
+        result = self.__client.execute(self.__query, variable_values={"nodeId": node_id, "args": [command]+arguments})
         self.__cache[cache_key] = result
-        return result["cmd"]["payload"]["json"]
+        return result["operation"]["payload"]["json"]
 
     def mutate(self, node_id: str, command: str, arguments: List[Union[str, int, float, bool]] = [], options: Options = {}):
-        return self.__client.execute(self.__mutation, variable_values={"nodeId": node_id, "command": [command]+arguments})
+        return self.__client.execute(self.__mutation, variable_values={"nodeId": node_id, "args": [command]+arguments})
 
 
 class QapioFluxCsvParser(FluxCsvParser):
@@ -270,6 +277,59 @@ def transform_tags(tags):
             kvps.append(kvp)
     return ['--Tag'] + ['\n' + kvp for kvp in kvps]
 
+
+
+class SqlApi:
+    def __init__(self, client: Qapi, node_id: str):
+        self.__cache = {}
+        self.__client = client
+        self.__node_id = node_id
+
+    def query(self, query):
+
+        cache_key = json.dumps(query)
+
+        if cache_key in self.__cache:
+            return self.__cache[cache_key]
+
+        data = self.__client.query(self.__node_id, "sql-query", [query])
+        csv = json.loads(data)
+        df = read_csv(StringIO(csv["data"]))
+
+        self.__cache[cache_key] = df
+
+        return df
+
+    def dataset(self, bucket: str, measurements: List[str], fields: List[str], from_date: Union[Timestamp, str],
+                to_date: Union[Timestamp, str], tags: dict = dict({})):
+
+        if type(from_date) == Timestamp:
+            from_date = timestamp2str(from_date)
+
+        if type(to_date) == Timestamp:
+            to_date = timestamp2str(to_date)
+
+        cache_key = json.dumps([",".join(measurements), ",".join(fields), from_date, to_date, bucket] + transform_tags(tags))
+
+        if cache_key in self.__cache:
+            return self.__cache[cache_key]
+
+        data = self.__client.query(self.__node_id, "time-series", ["--Bucket", bucket, "--Measurements", *measurements, "--Fields", *fields, "--FromDate", from_date, "--ToDate", to_date])
+        csv = json.loads(data)
+
+        df = read_csv(StringIO(csv["data"]))
+        
+        df_unstacked = melt(df, id_vars=['_measurement', "_time"], value_vars=fields, var_name='_field',
+                            value_name='_value')
+        
+        df_unstacked['_time'] = to_datetime(df_unstacked['_time']).dt.tz_localize(UTC)
+        
+        ds = DataSet(df_unstacked)
+        
+        self.__cache[cache_key] = ds
+
+        return ds
+    
 class TimeSeriesApi:
     def __init__(self, client: Qapi, node_id: str):
         self.__cache = {}
@@ -284,7 +344,7 @@ class TimeSeriesApi:
         if cache_key in self.__cache:
             return self.__cache[cache_key]
 
-        data = self.__client.query(self.__node_id, "query", [query])
+        data = self.__client.query(self.__node_id, "flux-query", [query])
         csv = json.loads(data)
         df = QapioFluxCsvParser.parse_to_dataframe({"value": csv})
         self.__cache[cache_key] = df
