@@ -51,7 +51,7 @@ class Factor(ThreadingActor):
     def on_receive(self, request):
         message = request["universe"]
         universeId = request["measurement"]
-
+        factor = request["factor"]
         try:
             results = {}
             dates = self.get_dates(message)
@@ -67,7 +67,7 @@ class Factor(ThreadingActor):
             for date, universe in dates.items():
                 results[date.strftime("%Y-%m-%dT%H:%M:%SZ")] = []
                 for member in universe:
-                    factor_date_result = FactorResult(universeId, member["measurement"], date, universeId)
+                    factor_date_result = FactorResult(universeId, member["measurement"], date, factor)
                     self.__instance.formula(factor_date_result, context)
                     if factor_date_result.value is not None:
                         for r in factor_date_result.results():
