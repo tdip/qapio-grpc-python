@@ -5,6 +5,12 @@ from .fsm.FSM import FSM, Action
 from .qapi.Qapi import Qapi, TimeSeriesApi
 import json
 from time import sleep
+import sys
+import traceback
+from pandas import Timestamp
+from pykka import ThreadingActor
+from .qapi.client.Client import QapioGrpc
+import inspect
 # import grpc
 # import pykka
 # from generated import chat_pb2, chat_pb2_grpc
@@ -227,3 +233,37 @@ def connect(fn):
             print("{}: {}".format(traceback.tb_frame.f_code.co_filename, traceback.tb_lineno))
             traceback = traceback.tb_next
         raise ex
+
+class Query(ThreadingActor):
+    def __init__(self, api, instance):
+        super().__init__()
+        self.__api = api
+        self.__log = api.api
+        self.__instance = instance
+        self.__input = api.input("RESPONSE").get()
+        api.output("REQUEST", self.actor_ref)
+
+    def on_receive(self, request):
+        print("AEKKD")
+        # message = request["universe"]
+        # universeId = request["measurement"]
+        # factor = request["factor"]
+
+        params = inspect.signature(self.__instance).parameters
+        print(list(params.keys()))
+        print(params, flush=True)
+        print(request, flush=True)
+
+        ordered_args = {param: request.get(param.capitalize()) for param in list(params.keys())}
+        print(ordered_args)
+        try:
+            self.__input.proxy().on_next({'data': self.__instance(**ordered_args)})
+        except Exception as ex:
+            traceback.print_exc()
+
+
+def query(fn):
+    manifest = load_qapio_manifest()
+    print(manifest, flush=True)
+    qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
+    Query.start(qapio, fn)
