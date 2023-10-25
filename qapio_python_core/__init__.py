@@ -254,7 +254,7 @@ class Query(ThreadingActor):
         print(params, flush=True)
         print(request, flush=True)
 
-        ordered_args = {param: request.get(param.capitalize()) for param in list(params.keys())}
+        ordered_args = {param: request.get(param) for param in list(params.keys())}
         print(ordered_args)
         try:
             self.__input.proxy().on_next({'data': self.__instance(**ordered_args)})
