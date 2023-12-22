@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'grpcio',
-    'reactivex==4.0.0',
+    'reactivex',
     'protobuf==3.20.1',
     "funcy",
     "pykka",
