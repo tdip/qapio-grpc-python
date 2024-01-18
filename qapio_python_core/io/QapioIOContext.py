@@ -2,6 +2,7 @@ import grpc
 from typing import List, Union
 
 from ..core.Manifest import Manifest
+import os
 
 from .grpc.QapioGrpcInstance import QapioGrpcInstance
 
@@ -13,7 +14,7 @@ class QapioIOContext(object):
 
     def __enter__(self, *args, **kwargs):
         #print("opening grpc...")
-        self.__channel = grpc.insecure_channel('localhost:5113')
+        self.__channel = grpc.insecure_channel(os.getenv('GRPC_ENDPOINT') + ':5113')
         #print("opened grpc")
         self.__grpc = QapioGrpcInstance(self.__channel)
 

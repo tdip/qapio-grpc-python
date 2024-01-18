@@ -1,5 +1,6 @@
 import sys
 import traceback
+import os
 
 from pandas import Timestamp
 from pykka import ThreadingActor
@@ -84,5 +85,5 @@ class Universe(ThreadingActor):
 
 def universe(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', "http://localhost:4000/graphql", manifest)
     Universe.start(qapio, fn)

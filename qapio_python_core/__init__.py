@@ -11,6 +11,7 @@ from pandas import Timestamp
 from pykka import ThreadingActor
 from .qapi.client.Client import QapioGrpc
 import inspect
+import os
 # import grpc
 # import pykka
 # from generated import chat_pb2, chat_pb2_grpc
@@ -265,5 +266,5 @@ class Query(ThreadingActor):
 def query(fn):
     manifest = load_qapio_manifest()
     print(manifest, flush=True)
-    qapio = QapioGrpc('localhost:5113', "http://localhost:4000/graphql", manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', "http://localhost:4000/graphql", manifest)
     Query.start(qapio, fn)
