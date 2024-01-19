@@ -266,5 +266,5 @@ class Query(ThreadingActor):
 def query(fn):
     manifest = load_qapio_manifest()
     print(manifest, flush=True)
-    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', "http://localhost:4000/graphql", manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
     Query.start(qapio, fn)
