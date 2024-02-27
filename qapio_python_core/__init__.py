@@ -268,3 +268,21 @@ def query(fn):
     print(manifest, flush=True)
     qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
     Query.start(qapio, fn)
+
+def source(fn):
+    manifest = load_qapio_manifest()
+    print(manifest, flush=True)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
+    Query.start(qapio, fn)
+
+def flow(fn):
+    manifest = load_qapio_manifest()
+    print(manifest, flush=True)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
+    Query.start(qapio, fn)
+
+def sink(fn):
+    manifest = load_qapio_manifest()
+    print(manifest, flush=True)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
+    Query.start(qapio, fn)
