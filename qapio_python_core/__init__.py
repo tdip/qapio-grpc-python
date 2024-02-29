@@ -242,47 +242,42 @@ class Query(ThreadingActor):
         self.__log = api.api
         self.__instance = instance
         self.__input = api.input("RESPONSE").get()
+        self.__logs = api.input("LOG").get()
         api.output("REQUEST", self.actor_ref)
 
     def on_receive(self, request):
-        print("AEKKD")
         # message = request["universe"]
         # universeId = request["measurement"]
         # factor = request["factor"]
 
         params = inspect.signature(self.__instance).parameters
-        print(list(params.keys()))
-        print(params, flush=True)
-        print(request, flush=True)
 
         ordered_args = {param: request.get(param) for param in list(params.keys())}
-        print(ordered_args)
+        self.__logs.proxy().on_next({'value': 'BILLEBA'})
+
         try:
             self.__input.proxy().on_next({'data': self.__instance(**ordered_args)})
         except Exception as ex:
+            self.__logs.proxy().on_next({'value': traceback.format_exc()})
             traceback.print_exc()
 
 
 def query(fn):
     manifest = load_qapio_manifest()
-    print(manifest, flush=True)
     qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
     Query.start(qapio, fn)
 
 def source(fn):
     manifest = load_qapio_manifest()
-    print(manifest, flush=True)
     qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
     Query.start(qapio, fn)
 
 def flow(fn):
     manifest = load_qapio_manifest()
-    print(manifest, flush=True)
     qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
     Query.start(qapio, fn)
 
 def sink(fn):
     manifest = load_qapio_manifest()
-    print(manifest, flush=True)
     qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':4000/graphql', manifest)
     Query.start(qapio, fn)
