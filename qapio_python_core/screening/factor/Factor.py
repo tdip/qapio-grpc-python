@@ -37,6 +37,7 @@ class Factor(ThreadingActor):
         self.__log = api.api
         self.__instance = instance
         self.__input = api.input("RESPONSE").get()
+        self.__logger = api.input("LOG").get()
         api.output("REQUEST", self.actor_ref)
 
     def get_dates(self, data):
@@ -76,6 +77,7 @@ class Factor(ThreadingActor):
 
             self.__input.proxy().on_next({"guid": request["guid"], 'data': results})
         except Exception as ex:
+            self.__logger.proxy().on_next({"value": traceback.format_exc()})
             traceback.print_exc()
 
 
