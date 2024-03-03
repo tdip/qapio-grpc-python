@@ -101,7 +101,7 @@ class APIActor(ThreadingActor):
 class QapioGrpc:
     def __init__(self, grpc_endpoint: str, gql_endpoint: str, manifest: Manifest):
         self.api = APIActor.start(grpc_endpoint, manifest)
-        self.__qapi = Qapi(gql_endpoint, sync=True)
+        self.__qapi = Qapi(gql_endpoint)
     def input(self, stream_id):
         return self.api.proxy().open_input(stream_id)
 

@@ -6,7 +6,7 @@ from io import StringIO
 import csv as csv_parser
 from numpy import finfo, float32, nan
 from pandas.api.types import is_numeric_dtype
-from pandas import Timestamp, DataFrame, Series, Timedelta, offsets, MultiIndex, to_datetime, read_csv, melt
+from pandas import Timestamp, DataFrame, Series, Timedelta, offsets, MultiIndex, to_datetime, read_csv, melt, read_json
 from pytz import UTC
 import requests
 import reactivex
@@ -17,7 +17,7 @@ class QapiHttpClient:
         self.__url = url
 
     def query(self, expression: str):
-        return requests.get(f"{self.__url}/query/{expression}", verify=False)
+        return requests.get(f"{self.__url}/query/{expression}", verify=False).json()
 
     def source(self, expression: str):
 
@@ -27,6 +27,30 @@ class QapiHttpClient:
             f"{self.__url}/source/{expression}",
             verify=False, stream=True
         ).iter_lines(decode_unicode=True))
+
+    def time_series(self, node_id: str, bucket: str, measurements: List[str], fields: List[str], from_date: Union[Timestamp, str],
+                    to_date: Union[Timestamp, str], tags: dict = dict({})):
+
+        if type(from_date) == Timestamp:
+            from_date = timestamp2str(from_date)
+
+        if type(to_date) == Timestamp:
+            to_date = timestamp2str(to_date)
+
+        data = json.loads(requests.get(f"{self.__url}/query/{node_id}.TimeSeries({{ bucket: '{bucket}', measurements: {json.dumps(measurements)}, fields: {json.dumps(fields)}, fromDate: '{from_date}', toDate: '{to_date}' }})", verify=False).json()["Data"])
+
+        df = DataFrame(data[1:], columns=data[0])
+
+        print(df, flush=True)
+
+        df_unstacked = melt(df, id_vars=['_measurement', "_time"], value_vars=fields, var_name='_field',
+                            value_name='_value')
+
+        df_unstacked['_time'] = to_datetime(df_unstacked['_time']).dt.tz_localize(UTC)
+
+        ds = DataSet(df_unstacked)
+
+        return ds
 
 
 class Options(TypedDict):
@@ -43,12 +67,10 @@ class Qapi:
 
         self.__client = QapiHttpClient(http_endpoint)
 
-    def time_series(self, node_id):
-        if node_id in self.__time_series:
-            return self.__time_series[node_id]
-        ts = TimeSeriesApi(self, node_id)
-        self.__time_series[node_id] = ts
-        return ts
+    def time_series(self, node_id: str, bucket: str, measurements: List[str], fields: List[str], from_date: Union[Timestamp, str],
+                    to_date: Union[Timestamp, str], tags: dict = dict({})):
+
+        return self.__client.time_series(node_id, bucket, measurements, fields, from_date, to_date, tags)
 
     def source(self, expression: str):
         return self.__client.source(expression)
@@ -63,16 +85,16 @@ class Qapi:
         self.__sql[node_id] = ts
         return ts
 
-    def query(self, node_id: str, command: str, arguments: List[Union[str, int, float, bool]] = [], options: Options = {}):
-        cache_key = json.dumps({"nodeId": node_id, "args": [command]+arguments})
-        if cache_key in self.__cache:
-            return self.__cache[cache_key]
-        result = self.__client.execute(self.__query, variable_values={"nodeId": node_id, "args": [command]+arguments})
-        self.__cache[cache_key] = result
-        return result["operation"]["payload"]["json"]
-
-    def mutate(self, node_id: str, command: str, arguments: List[Union[str, int, float, bool]] = [], options: Options = {}):
-        return self.__client.execute(self.__mutation, variable_values={"nodeId": node_id, "args": [command]+arguments})
+    # def query(self, node_id: str, command: str, arguments: List[Union[str, int, float, bool]] = [], options: Options = {}):
+    #     cache_key = json.dumps({"nodeId": node_id, "args": [command]+arguments})
+    #     if cache_key in self.__cache:
+    #         return self.__cache[cache_key]
+    #     result = self.__client.execute(self.__query, variable_values={"nodeId": node_id, "args": [command]+arguments})
+    #     self.__cache[cache_key] = result
+    #     return result["operation"]["payload"]["json"]
+    #
+    # def mutate(self, node_id: str, command: str, arguments: List[Union[str, int, float, bool]] = [], options: Options = {}):
+    #     return self.__client.execute(self.__mutation, variable_values={"nodeId": node_id, "args": [command]+arguments})
 
 
 class QapioFluxCsvParser(FluxCsvParser):
