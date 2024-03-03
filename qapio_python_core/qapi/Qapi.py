@@ -1,6 +1,4 @@
-from gql import gql, Client
-from gql.transport.aiohttp import AIOHTTPTransport
-from gql.transport.requests import RequestsHTTPTransport
+
 from typing import List, Union, TypedDict
 import json
 from influxdb_client.client.flux_csv_parser import FluxCsvParser, FluxSerializationMode
@@ -10,6 +8,25 @@ from numpy import finfo, float32, nan
 from pandas.api.types import is_numeric_dtype
 from pandas import Timestamp, DataFrame, Series, Timedelta, offsets, MultiIndex, to_datetime, read_csv, melt
 from pytz import UTC
+import requests
+import reactivex
+
+
+class QapiHttpClient:
+    def __init__(self, url: str):
+        self.__url = url
+
+    def query(self, expression: str):
+        return requests.get(f"{self.__url}/query/{expression}", verify=False)
+
+    def source(self, expression: str):
+
+        session = requests.Session()
+
+        return reactivex.from_iterable(session.get(
+            f"{self.__url}/source/{expression}",
+            verify=False, stream=True
+        ).iter_lines(decode_unicode=True))
 
 
 class Options(TypedDict):
@@ -18,39 +35,13 @@ class Options(TypedDict):
 
 
 class Qapi:
-    def __init__(self, http_endpoint: str, ws_endpoint: str = "", sync: bool = False):
+    def __init__(self, http_endpoint: str):
         self.__cache = {}
         self.__time_series = {}
         self.__sql = {}
         self.__http_endpoint = http_endpoint
-        self.__ws_endpoint = ws_endpoint
-        if sync:
-            self.http_transport = RequestsHTTPTransport(url=http_endpoint)
-        else:
-            self.http_transport = AIOHTTPTransport(url=http_endpoint)
 
-        self.__client = Client(transport=self.http_transport, fetch_schema_from_transport=True)
-        self.__query = gql(
-            """
-            query Operation($nodeId: String!, $args: [String!]!) {
-                operation(nodeId: $nodeId, args: $args) {
-                    payload {typeName, json}
-                    type,
-                    meta {correlationId}
-                }
-            }
-        """
-        )
-        self.__mutation = gql(
-            """
-            mutation Operation($nodeId: String!, $args: [String!]!) {
-                operation(nodeId: $nodeId, command: $args) {
-                    requestId,
-                    error
-                }
-            }
-        """
-        )
+        self.__client = QapiHttpClient(http_endpoint)
 
     def time_series(self, node_id):
         if node_id in self.__time_series:
@@ -58,6 +49,12 @@ class Qapi:
         ts = TimeSeriesApi(self, node_id)
         self.__time_series[node_id] = ts
         return ts
+
+    def source(self, expression: str):
+        return self.__client.source(expression)
+
+    def query(self, expression: str):
+        return self.__client.query(expression)
 
     def sql(self, node_id):
         if node_id in self.__sql:
@@ -318,18 +315,18 @@ class SqlApi:
         csv = json.loads(data)
 
         df = read_csv(StringIO(csv["data"]))
-        
+
         df_unstacked = melt(df, id_vars=['_measurement', "_time"], value_vars=fields, var_name='_field',
                             value_name='_value')
-        
+
         df_unstacked['_time'] = to_datetime(df_unstacked['_time']).dt.tz_localize(UTC)
-        
+
         ds = DataSet(df_unstacked)
-        
+
         self.__cache[cache_key] = ds
 
         return ds
-    
+
 class TimeSeriesApi:
     def __init__(self, client: Qapi, node_id: str):
         self.__cache = {}

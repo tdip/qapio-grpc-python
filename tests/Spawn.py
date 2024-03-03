@@ -1,26 +1,25 @@
-from qapio_python_core.qapi.Qapi import Qapi
+import requests
+import reactivex
 
-qapi = Qapi("http://localhost:4000/graphql")
+class QapiHttpClient:
+    def __init__(self, url: str):
+        self.__url = url
 
-print(qapi.query("MKT_CAP_LOCAL", "run", ["-12 days", "-1 day", "A"]))
+    def query(self, expression: str):
+        return requests.get(f"{self.__url}/query/{expression}", verify=False)
 
-#esults = qapi.time_series("MyInfluxNode").dataset("MY_DATA", ["B02ZTY-R", "B1MKLM-R", "B4KHWT-R"], ["VOLATILITY"], "2000-01-01", "2023-03-01")
+    def source(self, expression: str):
 
-query = f'from(bucket: "EXTRACT")' \
-        f'|> range(start: -1y, stop: now())' \
-        f'|> filter(fn: (r) => r["_measurement"] == "EM" and r["_field"]=="VOLATILITY")' \
-        f'|> keep(columns: ["FSYM_ID","_measurement"])' \
-        f'|> distinct()'
+        session = requests.Session()
 
-members = []
-
-
-results = qapi.time_series("InfluxDb").query(query)
+        return reactivex.from_iterable(session.get(
+            f"{self.__url}/source/{expression}",
+            verify=False, stream=True
+        ).iter_lines(decode_unicode=True))
 
 
-measurements = list(results.FSYM_ID.unique())
+client = QapiHttpClient("https://127.0.0.1:5035")
 
-for member in measurements:
-    members.append({"measurement": member, "meta": {}})
+print(client.query("Sql.TimeSeries({bucket: 'prices', measurements: ['XQG0NZ-R'],  fields: ['p_price'], fromDate: '2001-01-01', toDate: '2024-01-01'})").json())
 
-print(members)
+client.source("Source.Tick(100).Take(100)").subscribe(on_next=lambda x: print(x))
