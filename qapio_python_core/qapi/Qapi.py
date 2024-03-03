@@ -41,8 +41,6 @@ class QapiHttpClient:
 
         df = DataFrame(data[1:], columns=data[0])
 
-        print(df, flush=True)
-
         df_unstacked = melt(df, id_vars=['_measurement', "_time"], value_vars=fields, var_name='_field',
                             value_name='_value')
 
