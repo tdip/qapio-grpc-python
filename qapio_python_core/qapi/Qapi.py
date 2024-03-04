@@ -16,6 +16,8 @@ class QapiHttpClient:
     def __init__(self, url: str):
         self.__url = url
 
+    def endpoint(self, node_id: str):
+        return Endpoint(node_id, self)
     def query(self, expression: str):
         return requests.get(f"{self.__url}/query/{expression}", verify=False).json()
 
@@ -51,6 +53,15 @@ class QapiHttpClient:
         return ds
 
 
+class Endpoint:
+    def __init__(self, node_id: str, client: QapiHttpClient):
+        self.__node_id = node_id
+        self.__client = client
+
+    def query(self, api: str, args: dict({}) = dict({})):
+        return self.__client.query(f"{self.__node_id}.{api}({json.dumps(args)})")
+
+
 class Options(TypedDict):
     key: str
     value: Union[str, int, float, bool]
@@ -76,6 +87,8 @@ class Qapi:
     def query(self, expression: str):
         return self.__client.query(expression)
 
+    def endpoint(self, node_id: str):
+        return self.__client.endpoint(node_id)
     def sql(self, node_id):
         if node_id in self.__sql:
             return self.__sql[node_id]

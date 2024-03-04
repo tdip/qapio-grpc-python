@@ -12,6 +12,10 @@ class Context:
     def time_series(self, node_id: str) -> TimeSeriesApi:
         return self.qapi.time_series(node_id)
 
+
+    def endpoint(self, node_id: str):
+        return self.qapi.endpoint(node_id)
+
     def time_series(self, node_id: str, bucket: str, measurements: List[str], fields: List[str], from_date: Union[Timestamp, str],
                     to_date: Union[Timestamp, str], tags: dict = dict({})):
         return self.qapi.time_series(node_id, bucket, measurements, fields, from_date, to_date)
