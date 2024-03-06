@@ -20,8 +20,7 @@ class QapiHttpClient:
         ).iter_lines(decode_unicode=True))
 
 
-client = QapiHttpClient("https://127.0.0.1:5035")
+client = QapiHttpClient("https://127.0.0.1:8012")
 
 
-
-print(client.query(f"IndexScreen.run('-12 days', '-1 day')").json())
+print(client.query(f"TaskManager.Tasks.GetAll()").json())

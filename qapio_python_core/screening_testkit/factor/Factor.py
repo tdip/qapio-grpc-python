@@ -9,7 +9,7 @@ from qapio_python_core.screening.shared.Context import Context
 class Factor:
     def __init__(self, endpoint, instance, request):
         super().__init__()
-        self.__api = Qapi(endpoint, sync=True)
+        self.__api = Qapi(endpoint)
         self.__instance = instance
         self.on_receive(request)
 
