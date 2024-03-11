@@ -61,6 +61,32 @@ class Endpoint:
     def query(self, api: str, args: dict({}) = dict({})):
         return self.__client.query(f"{self.__node_id}.{api}({json.dumps(args)})")
 
+    def time_series(self, bucket: str, measurements: List[str], fields: List[str], from_date: Union[Timestamp, str],
+                    to_date: Union[Timestamp, str], tags: dict = dict({})):
+
+        if type(from_date) == Timestamp:
+            from_date = timestamp2str(from_date)
+
+        if type(to_date) == Timestamp:
+            to_date = timestamp2str(to_date)
+
+        data =self.__client.query(f"{self.__node_id}.TimeSeries({{ bucket: '{bucket}', measurements: {json.dumps(measurements)}, fields: {json.dumps(fields)}, fromDate: '{from_date}', toDate: '{to_date}' }})")
+
+        if "Data" not in data:
+            return
+
+        data =  json.loads(data["Data"])
+
+        df = DataFrame(data[1:], columns=data[0])
+
+        df_unstacked = melt(df, id_vars=['_measurement', "_time"], value_vars=fields, var_name='_field',
+                            value_name='_value')
+
+        df_unstacked['_time'] = to_datetime(df_unstacked['_time']).dt.tz_localize(UTC)
+
+        ds = DataSet(df_unstacked)
+
+        return ds
 
 class Options(TypedDict):
     key: str
