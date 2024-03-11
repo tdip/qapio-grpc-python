@@ -253,7 +253,6 @@ class Query(ThreadingActor):
         params = inspect.signature(self.__instance).parameters
 
         ordered_args = {param: request.get(param) for param in list(params.keys())}
-        self.__logs.proxy().on_next({'value': 'BILLEBA'})
 
         try:
             self.__input.proxy().on_next({'data': self.__instance(**ordered_args)})

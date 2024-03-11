@@ -6,7 +6,7 @@ import os
 
 from qapio_python_core import load_qapio_manifest
 from qapio_python_core.qapi.client.Client import QapioGrpc
-from qapio_python_core.screening.shared.Context import Context
+from qapio_python_core.screening.shared.Context import Context, Logger
 
 
 def print_to_stderr(a):
@@ -62,7 +62,7 @@ class Factor(ThreadingActor):
             for date, value in message.items():
                 all_members = all_members + [o.get("measurement") for o in value]
 
-            context = Context(self.__api.qapi, list(dates.keys()), list(set(all_members)), universeId)
+            context = Context(self.__api.qapi, list(dates.keys()), list(set(all_members)), universeId, Logger(self.__logger.proxy()))
 
             self.__instance.begin(context)
 

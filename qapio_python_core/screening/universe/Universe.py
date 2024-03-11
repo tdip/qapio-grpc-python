@@ -6,7 +6,7 @@ import os
 
 from qapio_python_core import load_qapio_manifest
 from qapio_python_core.qapi.client.Client import QapioGrpc
-from qapio_python_core.screening.shared.Context import Context
+from qapio_python_core.screening.shared.Context import Context, Logger
 import json
 import hashlib
 
@@ -45,7 +45,7 @@ class Universe(ThreadingActor):
 
             dates = self.get_dates(message)
 
-            context = Context(self.__api.qapi, list(dates), [], "")
+            context = Context(self.__api.qapi, list(dates), [], "", Logger(self.__input.proxy()))
 
             self.__instance.begin(context)
 
