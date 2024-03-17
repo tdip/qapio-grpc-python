@@ -263,20 +263,20 @@ class Query(ThreadingActor):
 
 def query(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5030', manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5032', manifest)
     Query.start(qapio, fn)
 
 def source(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5030', manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5032', manifest)
     Query.start(qapio, fn)
 
 def flow(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5030', manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5032', manifest)
     Query.start(qapio, fn)
 
 def sink(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5030', manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'http://' + os.getenv('GQL_ENDPOINT') + ':5032', manifest)
     Query.start(qapio, fn)

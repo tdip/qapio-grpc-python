@@ -20,7 +20,7 @@ class QapiHttpClient:
         ).iter_lines(decode_unicode=True))
 
 
-client = QapiHttpClient("https://127.0.0.1:8012")
+client = QapiHttpClient("https://127.0.0.1:5032")
 
 
-print(client.query(f"TaskManager.Tasks.GetAll()").json())
+client.source(f"Source.Tick(1000)").subscribe(on_next=lambda x: print(x))

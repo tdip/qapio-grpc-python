@@ -86,5 +86,5 @@ class Universe(ThreadingActor):
 
 def universe(fn):
     manifest = load_qapio_manifest()
-    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'https://' + os.getenv('GQL_ENDPOINT') + ':5030', manifest)
+    qapio = QapioGrpc(os.getenv('GRPC_ENDPOINT') + ':5113', 'https://' + os.getenv('GQL_ENDPOINT') + ':5032', manifest)
     Universe.start(qapio, fn)
