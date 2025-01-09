@@ -6,7 +6,7 @@ from io import StringIO
 import csv as csv_parser
 from numpy import finfo, float32, nan
 from pandas.api.types import is_numeric_dtype
-from pandas import Timestamp, DataFrame, Series, Timedelta, offsets, MultiIndex, to_datetime, read_csv, melt, read_json
+from pandas import Timestamp, DataFrame, Series, NA, Timedelta, offsets, MultiIndex, to_datetime, read_csv, melt, read_json
 from pytz import UTC
 import requests
 import reactivex
@@ -39,7 +39,9 @@ class QapiHttpClient:
         if type(to_date) == Timestamp:
             to_date = timestamp2str(to_date)
 
-        data = json.loads(requests.get(f"{self.__url}/query/{node_id}.TimeSeries({{ bucket: '{bucket}', measurements: {json.dumps(measurements)}, fields: {json.dumps(fields)}, fromDate: '{from_date}', toDate: '{to_date}' }})", verify=False).json()["Data"])
+        m = requests.get(f"{self.__url}/query/{node_id}.TimeSeries({{ bucket: '{bucket}', measurements: {json.dumps(measurements)}, fields: {json.dumps(fields)}, fromDate: '{from_date}', toDate: '{to_date}' }})", verify=False)
+
+        data = json.loads(m.json()["Data"])
 
         df = DataFrame(data[1:], columns=data[0])
 
@@ -75,15 +77,17 @@ class Endpoint:
         if "Data" not in data:
             return
 
+        if data["Data"] == "":
+            print(f"Blank for {fields[0]}", flush=True)
+            return
+
         data =  json.loads(data["Data"])
 
         df = DataFrame(data[1:], columns=data[0])
-
         df_unstacked = melt(df, id_vars=['_measurement', "_time"], value_vars=fields, var_name='_field',
                             value_name='_value')
 
         df_unstacked['_time'] = to_datetime(df_unstacked['_time']).dt.tz_localize(UTC)
-
         ds = DataSet(df_unstacked)
 
         return ds
@@ -240,9 +244,8 @@ class DataSet:
                     self.__series[measurement+field] = series
 
             series = self.__series.get(measurement+field)
-
-            #series = Series(data=series["_value"].values, index=series["_time"].values)
-            #series = series.tz_localize('UTC', level=0)
+            series = series.mask(series.apply(lambda x: isinstance(x, dict)), NA)
+            series = series.dropna()
 
             if from_date is None and to_date is None:
                 series = series

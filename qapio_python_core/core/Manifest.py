@@ -1,55 +1,49 @@
-import json
+from typing import Any
+from pykka import ThreadingActor
 import os
-
-INPUT_STREAMS = 'inputStreams'
-OUTPUT_STREAMS = 'outputStreams'
-GRAPH_ID = 'processId'
-REQUEST_ID = 'requestId'
-
-
-class Manifest:
-
-    def __init__(self, raw):
-        self.__raw = raw
-
-    @property
-    def graph_id(self):
-        return self.__raw[GRAPH_ID]
-
-    @property
-    def request_id(self):
-        return self.__raw[REQUEST_ID]
-
-    @property
-    def input_streams(self):
-        return self.__raw[INPUT_STREAMS]
-
-    @property
-    def output_streams(self):
-        return self.__raw[OUTPUT_STREAMS]
+import json
+import inspect
+from qapi_python.actors import Qapi as QapiActor
+from qapi_python.actors.Source import Event
 
 
-def load_qapio_manifest():
-    # Receive the manifest for the standard input
-    # This is an instance of "PythonQapioManifest"
-    # serialized to JSON.
-    # Qapio provides the manifest through the standard
-    # input, binary serialized.
+class FlowActor(QapiActor.Qapi):
+    def __init__(self, endpoint, func, *_args: Any, **_kwargs: Any):
+        super().__init__(endpoint,*_args, **_kwargs)
+        self.__function = func
+        self.__params = inspect.signature(self.__function).parameters
+        self.__spread = False
 
-    # The first bytes contain the length
-    # of the manifest
-    manifest_length = int.from_bytes(
-        os.read(0, 4),
-        "little"
-    )
+        if len(self.__params) > 1:
+            self.__spread = True
 
-    # The next "manifest_length" bytes contain the
-    # UTF-8 encoded JSON representation of the
-    # manifest.
-    manifest = json.loads(
-        os.read(0, manifest_length).decode('utf8')
-    )
+        self.subscribe("Request")
 
-    #print("loaded python manifest", manifest)
+        self.__sink = self.get_subject("Response")
 
-    return Manifest(manifest)
+    def transmit(self, value):
+
+        data = None
+
+        try:
+            data = json.loads(value)
+        except Exception as e:
+            print(e)
+
+        if self.__spread and (isinstance(value, dict) or isinstance(data, dict)):
+            ordered_args = {param: value.get(param) for param in list(self.__params.keys())}
+            self.__sink.on_next(self.__function(**ordered_args))
+        else:
+            self.__sink.on_next(self.__function(value))
+
+    def on_receive(self, message: Event) -> Any:
+
+        if message.inlet == "Request":
+            self.transmit(message.value)
+
+
+def function(fn):
+
+    endpoint = "127.0.0.1:5021"
+
+    FlowActor.start(endpoint, fn)
